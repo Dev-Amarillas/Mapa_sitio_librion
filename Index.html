@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de sitio · Librion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cocoa-950:#120906;
+  --cocoa-900:#1b0f09;
+  --cocoa-800:#2a1910;
+  --cocoa-700:#3a2417;
+  --gold:#d8aa50;
+  --gold-deep:#a97c2c;
+  --beige:#ecdcbc;
+  --cream:#fbf4e4;
+  --muted:#b9a58a;
+  --g:24px;
+  --line:rgba(216,170,80,.55);
+  --serif:"Playfair Display",Georgia,"Times New Roman",serif;
+  --body:"Lora",Georgia,serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;background:#120906}
+body{
+  margin:0;min-height:100vh;color:var(--beige);font-family:var(--body);
+  background:radial-gradient(1200px 600px at 50% -10%,#3b2415 0%,var(--cocoa-900) 55%,var(--cocoa-950) 100%) no-repeat,#120906;
+  line-height:1.6;
+}
+.wrap{max-width:1560px;margin:0 auto;padding:40px 28px 56px}
+header h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,4vw,46px);color:var(--cream);margin:0 0 6px;letter-spacing:.2px}
+header p{margin:0;color:var(--muted);max-width:64ch;font-size:17px}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:28px 0 18px}
+.search{
+  flex:1 1 260px;max-width:380px;background:var(--cocoa-800);border:1px solid rgba(216,170,80,.3);
+  color:var(--cream);padding:11px 16px;border-radius:999px;font:inherit;font-size:15px;
+}
+.search::placeholder{color:var(--muted)}
+.search:focus-visible,.chip:focus-visible,.card:focus-visible,.btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{
+  font:inherit;font-size:14px;color:var(--beige);background:transparent;cursor:pointer;
+  border:1px solid rgba(216,170,80,.35);padding:8px 16px;border-radius:999px;transition:background .2s,color .2s,border-color .2s;
+}
+.chip:hover{border-color:var(--gold)}
+.chip[aria-pressed="true"]{background:var(--gold);color:var(--cocoa-950);border-color:var(--gold);font-weight:500}
+.spacer{flex:1}
+.legend{display:flex;gap:18px;font-size:14px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.pub{background:var(--cream)}
+.dot.auth{background:var(--gold)}
+
+.detail{
+  display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr);gap:28px;
+  background:linear-gradient(180deg,var(--cocoa-800),#23140c);
+  border:1px solid rgba(216,170,80,.35);border-radius:16px;padding:24px 28px;margin-bottom:26px;
+}
+.detail h2{font-family:var(--serif);font-size:28px;margin:0 0 6px;color:var(--cream);font-weight:700}
+.detail .desc{margin:0 0 18px;color:var(--beige)}
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+.btn{
+  font:inherit;font-size:14px;cursor:pointer;border-radius:999px;padding:9px 18px;text-decoration:none;
+  border:1px solid var(--gold);background:var(--gold);color:var(--cocoa-950);font-weight:500;transition:filter .2s;
+}
+.btn:hover{filter:brightness(1.1)}
+.btn.ghost{background:transparent;color:var(--gold)}
+.btn[aria-disabled="true"]{opacity:.4;pointer-events:none}
+dl{margin:0;display:grid;grid-template-columns:150px 1fr;gap:12px 18px;align-content:start}
+dt{color:var(--muted);font-size:14px}
+dd{margin:0;word-break:break-word}
+code{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:14px;color:var(--gold)}
+.tag{display:inline-flex;align-items:center;gap:8px}
+
+.stage{position:relative;overflow-x:auto;overflow-y:hidden;padding-bottom:8px}
+.tree{width:max-content;transform-origin:top left}
+.tree ul{display:flex;justify-content:center;margin:0;padding:var(--g) 0 0;position:relative;list-style:none}
+.tree > ul{padding-top:0}
+.tree li{list-style:none;position:relative;padding:var(--g) 11px 0;display:flex;flex-direction:column;align-items:center}
+.tree li::before,.tree li::after{
+  content:"";position:absolute;top:0;right:50%;width:50%;height:var(--g);border-top:1px solid var(--line)
+}
+.tree li::after{right:auto;left:50%;border-left:1px solid var(--line)}
+.tree li:only-child{padding-top:0}
+.tree li:only-child::before,.tree li:only-child::after{display:none}
+.tree li:first-child::before,.tree li:last-child::after{border:0 none}
+.tree li:last-child::before{border-right:1px solid var(--line);border-radius:0 8px 0 0}
+.tree li:first-child::after{border-radius:8px 0 0 0}
+.tree ul ul::before{content:"";position:absolute;top:0;left:50%;height:var(--g);border-left:1px solid var(--line)}
+.chain{display:flex;flex-direction:column;align-items:center}
+.leaf{position:relative;margin-top:var(--g)}
+.leaf::before{content:"";position:absolute;left:50%;top:calc(-1 * var(--g));height:var(--g);border-left:1px solid var(--line)}
+
+.card{
+  font:inherit;text-align:left;cursor:pointer;color:var(--beige);min-width:168px;
+  background:var(--cocoa-700);border:1px solid var(--gold-deep);border-radius:12px;padding:11px 16px 12px;
+  display:grid;grid-template-columns:auto 1fr;column-gap:10px;row-gap:2px;align-items:center;
+  transition:transform .2s,border-color .2s,box-shadow .2s,opacity .25s;
+}
+.card.pub{border-color:rgba(251,244,228,.55)}
+.card:hover{transform:translateY(-2px);border-color:var(--gold)}
+.card .t{font-family:var(--serif);font-weight:500;font-size:16px;color:var(--cream)}
+.card .r{grid-column:2;font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:12px;color:var(--gold)}
+.card.root{background:linear-gradient(180deg,#e6bb62,var(--gold-deep));border-color:#f1d28b}
+.card.root .t{color:var(--cocoa-950);font-weight:700}
+.card.root .r{color:#3a2417}
+.card.root .dot{background:var(--cocoa-950)}
+.card.sel{box-shadow:0 0 0 2px var(--gold),0 10px 30px rgba(216,170,80,.22);transform:translateY(-2px)}
+.card.dim{opacity:.22}
+
+.note{margin-top:22px;color:var(--muted);font-size:14px;max-width:90ch}
+@media (max-width:860px){
+  .detail{grid-template-columns:1fr}
+  dl{grid-template-columns:120px 1fr}
+  .spacer{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Mapa de sitio de Librion</h1>
+    <p id="resumen">Todas las páginas funcionales de la plataforma, desde la portada hasta el panel de administración.</p>
+  </header>
+
+  <div class="bar">
+    <input class="search" id="q" type="search" placeholder="Buscar página o ruta" aria-label="Buscar página o ruta">
+    <div class="chips" role="group" aria-label="Filtrar por acceso">
+      <button class="chip" data-f="all" aria-pressed="true">Todas</button>
+      <button class="chip" data-f="pub" aria-pressed="false">Públicas</button>
+      <button class="chip" data-f="auth" aria-pressed="false">Con sesión</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="chips" role="group" aria-label="Tamaño del mapa">
+      <button class="chip" data-z="fit" aria-pressed="true">Ajustar al ancho</button>
+      <button class="chip" data-z="real" aria-pressed="false">Tamaño real</button>
+    </div>
+    <div class="legend">
+      <span><i class="dot pub"></i>Pública</span>
+      <span><i class="dot auth"></i>Requiere iniciar sesión</span>
+    </div>
+  </div>
+
+  <section class="detail" aria-live="polite">
+    <div>
+      <h2 id="d-title"></h2>
+      <p class="desc" id="d-desc"></p>
+      <div class="acts">
+        <button class="btn" id="copy">Copiar ruta</button>
+        
+      </div>
+    </div>
+    <dl>
+      <dt>Ruta</dt><dd><code id="d-path"></code></dd>
+      <dt>Nombre de ruta</dt><dd><code id="d-name"></code></dd>
+      <dt>Controlador</dt><dd><code id="d-ctrl"></code></dd>
+      <dt>Acceso</dt><dd><span class="tag"><i class="dot" id="d-dot"></i><span id="d-acc"></span></span></dd>
+      <dt>Depende de</dt><dd id="d-parent"></dd>
+    </dl>
+  </section>
+
+  <div class="stage" id="stage"><div class="tree" id="tree"></div></div>
+
+  <p class="note">Solo se incluyen páginas que se abren con GET y que funcionan hoy. Se omiten cerrar sesión, los envíos de formularios (POST, PUT, PATCH y DELETE), las rutas de imagen y video, y las rutas internas del framework.</p>
+</div>
+
+<script>
+const BASE = 'http://localhost:8000';
+
+const pages = [
+  {id:'inicio', parent:null, title:'Inicio', path:'/', name:'—', ctrl:'routes/web.php', access:'pub',
+   desc:'Portada de Librion con el carrusel de libros y los accesos para entrar o registrarse.'},
+
+  {id:'login', parent:'inicio', title:'Login', path:'/login', name:'login', ctrl:'AuthenticatedSessionController@create', access:'pub',
+   desc:'Formulario para iniciar sesión con correo y contraseña.'},
+  {id:'register', parent:'inicio', title:'Registro', path:'/register', name:'register', ctrl:'RegisteredUserController@create', access:'pub',
+   desc:'Formulario para crear una cuenta nueva en la librería.'},
+  {id:'verify', parent:'register', title:'Verificar correo', path:'/verify-email', name:'verification.notice', ctrl:'EmailVerificationPromptController', access:'auth',
+   desc:'Aviso que pide confirmar el correo con el enlace que se envía al registrarse.'},
+  {id:'forgot', parent:'inicio', title:'Recuperar contraseña', path:'/forgot-password', name:'password.request', ctrl:'PasswordResetLinkController@create', access:'pub',
+   desc:'Solicita por correo el enlace para restablecer la contraseña.'},
+  {id:'reset', parent:'forgot', title:'Restablecer contraseña', path:'/reset-password/{token}', name:'password.reset', ctrl:'NewPasswordController@create', access:'pub',
+   desc:'Permite elegir una contraseña nueva desde el enlace recibido por correo.'},
+
+  {id:'dashboard', parent:'inicio', title:'Dashboard', path:'/dashboard', name:'dashboard', ctrl:'DashboardController@index', access:'auth',
+   desc:'Panel principal desde donde se entra a los módulos de la plataforma.'},
+
+  {id:'autores', parent:'dashboard', title:'Autores', path:'/autores', name:'autores.index', ctrl:'AutorController@index', access:'auth',
+   desc:'Listado de autores con opciones para registrar, editar y eliminar.'},
+  {id:'autores-nuevo', parent:'autores', title:'Nuevo autor', path:'/autores/create', name:'autores.create', ctrl:'AutorController@create', access:'auth',
+   desc:'Formulario para registrar un autor.'},
+  {id:'autores-editar', parent:'autores', title:'Editar autor', path:'/autores/{autor}/edit', name:'autores.edit', ctrl:'AutorController@edit', access:'auth',
+   desc:'Formulario para modificar los datos de un autor.'},
+  {id:'autores-pdf', parent:'autores', title:'Reporte de autores', path:'/autores/pdf', name:'autores.pdf', ctrl:'AutorController@pdf', access:'auth',
+   desc:'Vista del reporte PDF de autores con los filtros elegidos.'},
+
+  {id:'categorias', parent:'dashboard', title:'Categorías', path:'/categorias', name:'categorias.index', ctrl:'CategoriaController@index', access:'auth',
+   desc:'Listado de categorías con opciones para registrar, editar y eliminar.'},
+  {id:'categorias-nueva', parent:'categorias', title:'Nueva categoría', path:'/categorias/create', name:'categorias.create', ctrl:'CategoriaController@create', access:'auth',
+   desc:'Formulario para registrar una categoría.'},
+  {id:'categorias-editar', parent:'categorias', title:'Editar categoría', path:'/categorias/{categoria}/edit', name:'categorias.edit', ctrl:'CategoriaController@edit', access:'auth',
+   desc:'Formulario para modificar una categoría.'},
+  {id:'categorias-pdf', parent:'categorias', title:'Reporte de categorías', path:'/categorias/pdf', name:'categorias.pdf', ctrl:'CategoriaController@pdf', access:'auth',
+   desc:'Vista del reporte PDF de categorías con los filtros elegidos.'},
+
+  {id:'assets', parent:'dashboard', title:'Archivos', path:'/assets', name:'assets.index', ctrl:'AssetController@index', access:'auth',
+   desc:'Galería de imágenes y videos subidos a la plataforma.'},
+  {id:'assets-subir', parent:'assets', title:'Subir archivo', path:'/assets/create', name:'assets.create', ctrl:'AssetController@create', access:'auth',
+   desc:'Formulario para subir una imagen o un video.'},
+  {id:'assets-editar', parent:'assets', title:'Editar archivo', path:'/assets/{asset}/edit', name:'assets.edit', ctrl:'AssetController@edit', access:'auth',
+   desc:'Permite reemplazar un archivo y borrar el anterior.'},
+
+  {id:'perfil', parent:'dashboard', title:'Perfil', path:'/profile', name:'profile.edit', ctrl:'ProfileController@edit', access:'auth',
+   desc:'Datos de la cuenta, foto de perfil y cambio de contraseña.'},
+  {id:'confirmar', parent:'perfil', title:'Confirmar contraseña', path:'/confirm-password', name:'password.confirm', ctrl:'ConfirmablePasswordController@show', access:'auth',
+   desc:'Pide la contraseña de nuevo antes de una acción delicada.'}
+];
+
+const byId = Object.fromEntries(pages.map(p => [p.id, p]));
+const kids = id => pages.filter(p => p.parent === id);
+const tree = document.getElementById('tree');
+const stage = document.getElementById('stage');
+let selected = null, filter = 'all', zoom = 'fit', query = '';
+
+function card(p){
+  const b = document.createElement('button');
+  b.className = 'card ' + p.access + (p.parent === null ? ' root' : '');
+  b.dataset.id = p.id;
+  b.innerHTML = '<i class="dot ' + p.access + '"></i><span class="t"></span><span class="r"></span>';
+  b.querySelector('.t').textContent = p.title;
+  b.querySelector('.r').textContent = p.path;
+  b.addEventListener('click', () => select(p.id));
+  return b;
+}
+
+function node(p){
+  const li = document.createElement('li');
+  li.appendChild(card(p));
+  const ch = kids(p.id);
+  if (ch.length){
+    if (ch.every(k => !kids(k.id).length)){
+      const chain = document.createElement('div');
+      chain.className = 'chain';
+      ch.forEach(k => {
+        const leaf = document.createElement('div');
+        leaf.className = 'leaf';
+        leaf.appendChild(card(k));
+        chain.appendChild(leaf);
+      });
+      li.appendChild(chain);
+    } else {
+      const ul = document.createElement('ul');
+      ch.forEach(k => ul.appendChild(node(k)));
+      li.appendChild(ul);
+    }
+  }
+  return li;
+}
+
+function select(id){
+  selected = id;
+  const p = byId[id];
+  document.querySelectorAll('.card').forEach(c => c.classList.toggle('sel', c.dataset.id === id));
+  document.getElementById('d-title').textContent = p.title;
+  document.getElementById('d-desc').textContent = p.desc;
+  document.getElementById('d-path').textContent = p.path;
+  document.getElementById('d-name').textContent = p.name;
+  document.getElementById('d-ctrl').textContent = p.ctrl;
+  document.getElementById('d-acc').textContent = p.access === 'pub' ? 'Pública' : 'Requiere iniciar sesión';
+  document.getElementById('d-dot').className = 'dot ' + p.access;
+  document.getElementById('d-parent').textContent = p.parent ? byId[p.parent].title : 'Es la página de entrada';
+  const open = document.getElementById('open');
+  const hasParam = p.path.includes('{');
+  open.href = hasParam ? '#' : BASE + p.path;
+  open.setAttribute('aria-disabled', hasParam ? 'true' : 'false');
+  open.title = hasParam ? 'Esta ruta necesita un valor en la URL' : '';
+}
+
+function applyFilter(){
+  const q = query.trim().toLowerCase();
+  document.querySelectorAll('.card').forEach(c => {
+    const p = byId[c.dataset.id];
+    const okAcc = filter === 'all' || p.access === filter;
+    const okQ = !q || (p.title + ' ' + p.path + ' ' + p.name).toLowerCase().includes(q);
+    c.classList.toggle('dim', !(okAcc && okQ));
+  });
+}
+
+function layout(){
+  tree.style.transform = 'none';
+  stage.style.height = 'auto';
+  if (zoom === 'fit'){
+    const s = Math.min(1, stage.clientWidth / tree.scrollWidth);
+    tree.style.transform = 'scale(' + s + ')';
+    stage.style.height = Math.ceil(tree.offsetHeight * s + 8) + 'px';
+    stage.style.overflowX = 'hidden';
+  } else {
+    stage.style.overflowX = 'auto';
+  }
+}
+
+tree.appendChild(Object.assign(document.createElement('ul'), {})).appendChild(node(pages[0]));
+
+const pub = pages.filter(p => p.access === 'pub').length;
+document.getElementById('resumen').textContent =
+  pages.length + ' páginas funcionales (' + pub + ' públicas y ' + (pages.length - pub) + ' con sesión), de la portada al panel de administración.';
+
+document.querySelectorAll('[data-f]').forEach(b => b.addEventListener('click', () => {
+  filter = b.dataset.f;
+  document.querySelectorAll('[data-f]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  applyFilter();
+}));
+document.querySelectorAll('[data-z]').forEach(b => b.addEventListener('click', () => {
+  zoom = b.dataset.z;
+  document.querySelectorAll('[data-z]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  layout();
+}));
+document.getElementById('q').addEventListener('input', e => { query = e.target.value; applyFilter(); });
+document.getElementById('copy').addEventListener('click', e => {
+  const btn = e.currentTarget, txt = byId[selected].path;
+  const done = () => { btn.textContent = 'Ruta copiada'; setTimeout(() => btn.textContent = 'Copiar ruta', 1600); };
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, done); else done();
+});
+document.getElementById('open').addEventListener('click', e => {
+  if (e.currentTarget.getAttribute('aria-disabled') === 'true') e.preventDefault();
+});
+window.addEventListener('resize', layout);
+
+select('dashboard');
+layout();
+if (document.fonts) document.fonts.ready.then(layout);
+</script>
+</body>
+</html>
